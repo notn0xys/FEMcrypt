@@ -1,0 +1,1 @@
+C:\Users\Koses\ Suvarnasuddhi\Documents\KMITL\Elementary\ System\ Programming\rustProjects\projects\Rust_proj\FEMcrypt\target\debug\FEMcrypt.exe: C:\Users\Koses\ Suvarnasuddhi\Documents\KMITL\Elementary\ System\ Programming\rustProjects\projects\Rust_proj\FEMcrypt\src\main.rs
