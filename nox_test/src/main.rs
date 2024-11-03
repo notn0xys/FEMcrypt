@@ -20,7 +20,7 @@ impl Sandbox for Editor{
         }
     }
     fn view(&self) -> Element<Message>{
-        text("hello word").into()
+        text("hello! word").into()
     }
     
 
