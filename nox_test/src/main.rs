@@ -1,5 +1,5 @@
 use std::path::Path;
-use sqlite::{Connection,Value};
+use sqlite::{Connection,Value,State};
 use std::fs;
 use std::fs::File;
 use iced::alignment::Vertical;
@@ -43,7 +43,6 @@ enum SigninPageMessage{
     UpdateUser(String),
     UpdatePassword(String),
     Info(String,String),
-    Login,
 }
 #[derive(Debug, Clone)]
 enum SignupPageMessage{
@@ -87,7 +86,7 @@ impl App{
             }
         };
         (App {
-            current_user : 0,
+            current_user : -1,
             connect: connection,
             current_page: Page::SignupPage,
             signin: Signin::new(),
@@ -164,12 +163,14 @@ impl App{
                     }
                     SignupPageMessage::Sign(user, pass) => {
                         self.add_data(&user, &pass);
+                        self.signup.username = "".to_string();
+                        self.signup.password = "".to_string();             
                         self.current_page = Page::GenKeyPage
                     }
                 }
             }
-            Message::SwitchPage(Page) => {
-                self.current_page = Page
+            Message::SwitchPage(page) => {
+                self.current_page = page
             }
             Message::MainPage(message) => {
                 match message{
@@ -186,9 +187,6 @@ impl App{
             } 
             Message::Signin(message) => {
                 match message {
-                    SigninPageMessage::Login => {
-
-                    }
                     SigninPageMessage::UpdateUser(value) => {
                         self.signin.username = value
 
@@ -197,7 +195,9 @@ impl App{
                         self.signin.password = val
                     }
                     SigninPageMessage::Info(user, pass) => {
-                        self.check_data(&user, &pass)                     
+                        self.check_data(&user, &pass);
+                        self.signin.username = "".to_string();
+                        self.signin.password = "".to_string()                     
                     }
                  }  
             }
@@ -205,27 +205,39 @@ impl App{
     }
     fn add_data(&self,user:&str,pass:&str) {
         if let Some(conn) = &self.connect {
-            println!("Using existing database connection in add_data.");
             let mut statement = conn.prepare("INSERT INTO userdata (username, password) VALUES (?, ?)")
                 .expect("Failed to prepare statement");
             statement.bind((1, user)).expect("Failed to bind username");
             statement.bind((2, pass)).expect("Failed to bind password");
             statement.next().expect("Failed to execute statement");
             println!("User '{}' added successfully!", user);
-        } else {
-            eprintln!("Database connection is None in add_data.");
         }
+        
     }
-    fn check_data(&self,user:&str,pass:&str) {
+    fn check_data(&mut self,user:&str,pass:&str) {
         match &self.connect{
             Some(value) => {
-                let mut statement = value.prepare("INSERT INTO userdata (username, password) VALUES (?, ?)").unwrap();
-                
+                let mut statement = value.prepare("SELECT id FROM userdata WHERE username = ? AND password = ?").unwrap();
+                statement.bind((1, user)).unwrap();
+                statement.bind((2, pass)).unwrap();
+                if let State::Row = statement.next().unwrap() {
+                    let user_id = statement.read::<i64, _>(0).unwrap() as i32;
+                    self.current_user = user_id;
+                    println!("Logged in sucessfully as {}", user);
+                    println!("User id to track now set as {}",self.current_user);
+                    self.current_page = Page::MainPage;
+                }else {
+                    self.current_user = -1;
+                    println!("Wrong username and pasword");
+                }
             }
             None => {
                 println!("Error establiching connection at check_data")
             }
         }
+    }
+    fn gen_key(&self) {
+        
     }
 }    
     fn theme(app: &App) -> Theme {
