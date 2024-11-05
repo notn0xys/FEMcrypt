@@ -1,3 +1,7 @@
+use std::path::Path;
+use sqlite::{Connection,Value};
+use std::fs;
+use std::fs::File;
 use iced::alignment::Vertical;
 use iced::widget::{
     self, button, center, checkbox, column, container, horizontal_space, keyed_column, row, text, text_input,vertical_space,Space
@@ -15,6 +19,8 @@ struct Signin{
 }
 #[derive(Default)]
 struct App{
+    current_user: i32,
+    connect: Option<Connection>,
     current_page: Page,
     signin: Signin,
     signup: Signup,
@@ -43,7 +49,7 @@ enum SigninPageMessage{
 enum SignupPageMessage{
     UpdateUser(String),
     UpdatePassword(String),
-    Signup(String,String),
+    Sign(String,String),
 }
 #[derive(Debug, Clone)]
 enum Message{
@@ -69,12 +75,25 @@ impl Signin {
     }
 }
 impl App{
-    fn new() -> Self{
-        App {
+    fn new() -> (Self, Command<Message>){
+        let connection = match sqlite::open("data/app.db") {
+            Ok(conn) => {
+                println!("Database connection successfully established.");
+                Some(conn)
+            }
+            Err(e) => {
+                eprintln!("Failed to open database: {:?}", e);
+                None
+            }
+        };
+        (App {
+            current_user : 0,
+            connect: connection,
             current_page: Page::SignupPage,
             signin: Signin::new(),
             signup: Signup::new()
-        }
+        },
+        Command::none())
     }
     fn view(&self) -> Element<Message>{
         match &self.current_page{
@@ -117,7 +136,7 @@ impl App{
                 .size(30)
                 .align_x(Center);
                 let submit_b:widget::Container<'_, Message> = container(button(container(text("Sign up")).align_x(Center))
-                .on_press(Message::Signup(SignupPageMessage::Signup(self.signup.username.clone(), self.signup.password.clone())))
+                .on_press(Message::Signup(SignupPageMessage::Sign(self.signup.username.clone(), self.signup.password.clone())))
                 .padding(15))
                 .align_x(Center)
                 .width(Fill);
@@ -135,6 +154,20 @@ impl App{
     }
     fn update(&mut self, message:Message){
         match message {
+            Message::Signup(message) => {
+                match message {
+                    SignupPageMessage::UpdatePassword(val) => {
+                        self.signup.password = val
+                    }
+                    SignupPageMessage::UpdateUser(val) => {
+                        self.signup.username = val
+                    }
+                    SignupPageMessage::Sign(user, pass) => {
+                        self.add_data(&user, &pass);
+                        self.current_page = Page::GenKeyPage
+                    }
+                }
+            }
             Message::SwitchPage(Page) => {
                 self.current_page = Page
             }
@@ -164,41 +197,57 @@ impl App{
                         self.signin.password = val
                     }
                     SigninPageMessage::Info(user, pass) => {
-                        if self.check_data(){
-                            self.current_page = Page::MainPage;
-                        }
+                        self.check_data(&user, &pass)                     
                     }
                  }  
             }
-            Message::Signup(message) => {
-                match message{
-                    SignupPageMessage::Signup(user, pass) => {
-                        if user.len() == 0 ||  pass.len() == 0{
-                            println!("Unable to save data as it is empty");
-                        }
-                        self.add_to_db();
-                        self.current_page = Page::GenKeyPage
-                    }
-                    SignupPageMessage::UpdatePassword(val) => {
-                        self.signup.password = val
-                    }
-                    SignupPageMessage::UpdateUser(val) => {
-                        self.signup.username = val
-                    }
-                }
+        }
+    }
+    fn add_data(&self,user:&str,pass:&str) {
+        if let Some(conn) = &self.connect {
+            println!("Using existing database connection in add_data.");
+            let mut statement = conn.prepare("INSERT INTO userdata (username, password) VALUES (?, ?)")
+                .expect("Failed to prepare statement");
+            statement.bind((1, user)).expect("Failed to bind username");
+            statement.bind((2, pass)).expect("Failed to bind password");
+            statement.next().expect("Failed to execute statement");
+            println!("User '{}' added successfully!", user);
+        } else {
+            eprintln!("Database connection is None in add_data.");
+        }
+    }
+    fn check_data(&self,user:&str,pass:&str) {
+        match &self.connect{
+            Some(value) => {
+                let mut statement = value.prepare("INSERT INTO userdata (username, password) VALUES (?, ?)").unwrap();
+                
+            }
+            None => {
+                println!("Error establiching connection at check_data")
             }
         }
     }
-    fn add_to_db(&self) {
-
-    }
-    fn check_data(&self) -> bool {
-        true
-    }
-}
-fn theme(app: &App) -> Theme {
+}    
+    fn theme(app: &App) -> Theme {
     Theme::TokyoNight
-}
+    }
+
 pub fn main() -> iced::Result {
-    iced::application("Page switch", App::update, App::view).theme(theme).run()
+    let folder_path = "data";
+    let db_path = format!("{}/app.db", folder_path);
+    if !Path::new(folder_path).exists() {
+        fs::create_dir(folder_path).expect("Failed to create folder");
+    }
+    if !Path::new(&db_path).exists() {
+        File::create(db_path).unwrap();
+    }
+    let path = sqlite::open("data/app.db").unwrap();
+    path.execute(
+ "CREATE TABLE IF NOT EXISTS userdata (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL
+        );"
+    ).unwrap();
+    iced::application("Page switch", App::update, App::view).theme(theme).run_with(App::new)
 }
