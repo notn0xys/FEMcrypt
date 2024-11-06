@@ -1,8 +1,0 @@
-C:\Users\Koses Suvarnasuddhi\Documents\KMITL\Elementary System Programming\rustProjects\projects\Rust_proj\FEMcrypt\target\debug\deps\libclipboard_win-d5a8cfb4722d76d3.rmeta: C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\lib.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\formats.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\raw.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\utils.rs
-
-C:\Users\Koses Suvarnasuddhi\Documents\KMITL\Elementary System Programming\rustProjects\projects\Rust_proj\FEMcrypt\target\debug\deps\clipboard_win-d5a8cfb4722d76d3.d: C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\lib.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\formats.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\raw.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\utils.rs
-
-C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\lib.rs:
-C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\formats.rs:
-C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\raw.rs:
-C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clipboard-win-4.5.0\src\utils.rs:

@@ -1,9 +1,0 @@
-C:\Users\Koses Suvarnasuddhi\Documents\KMITL\Elementary System Programming\rustProjects\projects\Rust_proj\FEMcrypt\target\debug\deps\liberror_code-d269118d6ce15add.rmeta: C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\lib.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\posix.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\system.rs
-
-C:\Users\Koses Suvarnasuddhi\Documents\KMITL\Elementary System Programming\rustProjects\projects\Rust_proj\FEMcrypt\target\debug\deps\liberror_code-d269118d6ce15add.rlib: C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\lib.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\posix.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\system.rs
-
-C:\Users\Koses Suvarnasuddhi\Documents\KMITL\Elementary System Programming\rustProjects\projects\Rust_proj\FEMcrypt\target\debug\deps\error_code-d269118d6ce15add.d: C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\lib.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\posix.rs C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\system.rs
-
-C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\lib.rs:
-C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\posix.rs:
-C:\Users\Koses\ Suvarnasuddhi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\error-code-2.3.1\src\system.rs:
