@@ -28,6 +28,7 @@ struct App{
     current_page: Page,
     signin: Signin,
     signup: Signup,
+    active_tab: MainTab,
 }
 #[derive(Default,Debug, Clone)]
 enum Page{
@@ -35,6 +36,12 @@ enum Page{
     #[default] SignupPage,
     MainPage,
     GenKeyPage,
+}
+#[derive(Default,Debug, Clone, Copy, PartialEq, Eq)]
+enum MainTab {
+    #[default]Encrypt,
+    Decrypt,
+    Logs,
 }
 #[derive(Debug, Clone)]
 enum MainPageMessage{
@@ -60,6 +67,7 @@ enum Message{
     Signup(SignupPageMessage),
     Signin(SigninPageMessage),
     MainPage(MainPageMessage),
+    MainPageTabSelected(MainTab),
 }
 impl Signup {
     fn new() -> Self{
@@ -96,7 +104,8 @@ impl App{
             connect: connection,
             current_page: Page::SignupPage,
             signin: Signin::new(),
-            signup: Signup::new()
+            signup: Signup::new(),
+            active_tab: MainTab::Encrypt
         },
         Command::none())
     }
@@ -152,15 +161,63 @@ impl App{
                 column![Space::new(30,30),title,username,password,submit_b,err_msg,track].spacing(50).padding(60).width(Fill).into()     
             }
             Page::MainPage => {
-                button("Log out").on_press(Message::SwitchPage(Page::SignupPage)).into()
+                let tabs = TabBar::new(|tab| Message::MainPageTabSelected(tab))
+                .push(MainTab::Encrypt, TabLabel::Text("Encrypt".to_string()))
+                .push(MainTab::Decrypt, TabLabel::Text("Decrypt".to_string()))
+                .push(MainTab::Logs, TabLabel::Text("Logs".to_string()));
+                let content = match self.active_tab{
+                    MainTab::Decrypt => {
+                        self.view_decrypt_tab()
+                    }
+                    MainTab::Logs => {
+                        self.view_logs_tab()
+                    }
+                    MainTab::Encrypt => {
+                        self.view_encrypt_tab()
+                    }
+                };
+                column![tabs, content].into()
             }
             Page::GenKeyPage => {
                 button("Switch to main").on_press(Message::SwitchPage(Page::MainPage),).into()
             }
         }
     }
+    fn view_encrypt_tab(&self) -> Element<Message> {
+        column![
+            button("Choose File").on_press(Message::MainPage(MainPageMessage::Encrypt)),
+            button("Choose Folder").on_press(Message::MainPage(MainPageMessage::Encrypt)),
+            text("Encryption Method").size(20),
+            button("One-time key").on_press(Message::MainPage(MainPageMessage::Encrypt))
+        ]
+        .spacing(10)
+        .into()
+    }
+
+    fn view_decrypt_tab(&self) -> Element<Message> {
+        column![
+            button("Choose File").on_press(Message::MainPage(MainPageMessage::Decrypt)),
+            button("Choose Folder").on_press(Message::MainPage(MainPageMessage::Decrypt)),
+            text("Decryption Method").size(20),
+            button("Master Key").on_press(Message::MainPage(MainPageMessage::Decrypt))
+        ]
+        .spacing(10)
+        .into()
+    }
+
+    fn view_logs_tab(&self) -> Element<Message> {
+
+        column![
+            row![text("Filename").size(16), text("Encryption Method").size(16), text("Date").size(16)],
+        ]
+        .spacing(10)
+        .into()
+    }
     fn update(&mut self, message:Message){
         match message {
+            Message::MainPageTabSelected(tab) => {
+                self.active_tab = tab;
+            }
             Message::Signup(message) => {
                 match message {
                     SignupPageMessage::UpdatePassword(val) => {
@@ -211,6 +268,29 @@ impl App{
                  }  
             }
         }
+    }
+    fn get_logs(&self) {
+        // match &self.connect{
+        //     Some(value) => {
+        //         let mut statement = value.prepare("SELECT id FROM userdata WHERE username = ? AND password = ?").unwrap();
+        //         statement.bind((1, user)).unwrap();
+        //         statement.bind((2, pass)).unwrap();
+        //         if let State::Row = statement.next().unwrap() {
+        //             let user_id = statement.read::<i64, _>(0).unwrap() as i32;
+        //             self.current_user = user_id;
+        //             println!("Logged in sucessfully as {}", user);
+        //             println!("User id to track now set as {}",self.current_user);
+        //             self.signin.err_msg = "".to_string();
+        //             self.current_page = Page::MainPage;
+        //         }else {
+        //             self.current_user = -1;
+        //             self.signin.err_msg = "Wrong username or password".to_string()
+        //         }
+        //     }
+        //     None => {
+        //         println!("Error establiching connection at check_data")
+        //     }
+        // }
     }
     fn add_data(&mut self,user:&str,pass:&str) {
         if user.len() == 0 || pass.len() == 0{
