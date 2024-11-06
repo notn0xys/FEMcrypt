@@ -4,7 +4,7 @@ use std::fs;
 use std::fs::File;
 use iced::alignment::Vertical;
 use iced::widget::{
-    self, button, center, checkbox, column, container, horizontal_space, keyed_column, row, text, text_input,vertical_space,Space
+    self, button, center, checkbox, column, container, horizontal_space, keyed_column, row, text, text_input,vertical_space,Space,scrollable
 };
 use iced_aw::{TabLabel,TabBar};
 use iced::{self, Center, Color, Element, Fill, Font, Length, Renderer, Subscription, Task as Command, Theme};
@@ -22,6 +22,10 @@ struct Signin{
 
 }
 #[derive(Default)]
+struct Maindata{
+    logs:String
+}
+#[derive(Default)]
 struct App{
     current_user: i32,
     connect: Option<Connection>,
@@ -29,6 +33,7 @@ struct App{
     signin: Signin,
     signup: Signup,
     active_tab: MainTab,
+    maindata: Maindata
 }
 #[derive(Default,Debug, Clone)]
 enum Page{
@@ -47,7 +52,8 @@ enum MainTab {
 enum MainPageMessage{
     Encrypt,
     Decrypt,
-    Logs
+    Logs,
+    Logout
 }
 #[derive(Debug, Clone)]
 enum SigninPageMessage{
@@ -87,6 +93,13 @@ impl Signin {
         }
     }
 }
+impl Maindata{
+    fn new() -> Self{
+        Maindata{
+            logs: "".to_string()
+        }
+    }
+}
 impl App{
     fn new() -> (Self, Command<Message>){
         let connection = match sqlite::open("data/app.db") {
@@ -105,7 +118,8 @@ impl App{
             current_page: Page::SignupPage,
             signin: Signin::new(),
             signup: Signup::new(),
-            active_tab: MainTab::Encrypt
+            active_tab: MainTab::Encrypt,
+            maindata: Maindata::new()
         },
         Command::none())
     }
@@ -184,12 +198,17 @@ impl App{
         }
     }
     fn view_encrypt_tab(&self) -> Element<Message> {
+        let file_btn: widget::Button<'_, Message> = button("Choose File").on_press(Message::MainPage(MainPageMessage::Encrypt));
+        let choose_folder: widget::Button<'_, Message> = button("Choose Folder").on_press(Message::MainPage(MainPageMessage::Encrypt));
+
+        let row_1 = row![file_btn,horizontal_space(),choose_folder].padding(30);
+        
         column![
-            button("Choose File").on_press(Message::MainPage(MainPageMessage::Encrypt)),
-            button("Choose Folder").on_press(Message::MainPage(MainPageMessage::Encrypt)),
+            row_1,
             text("Encryption Method").size(20),
             button("One-time key").on_press(Message::MainPage(MainPageMessage::Encrypt))
         ]
+        .padding(30)
         .spacing(10)
         .into()
     }
@@ -206,12 +225,12 @@ impl App{
     }
 
     fn view_logs_tab(&self) -> Element<Message> {
-
-        column![
-            row![text("Filename").size(16), text("Encryption Method").size(16), text("Date").size(16)],
-        ]
-        .spacing(10)
-        .into()
+        let log_out_btn = button("Log out").on_press(Message::MainPage(MainPageMessage::Logout)); 
+        let get_logs = container(button("Get logs").on_press(Message::MainPage(MainPageMessage::Logs))).align_x(Center);
+        let bot_row = row![horizontal_space(),get_logs,horizontal_space(),log_out_btn];
+        let logs_text = text(self.maindata.logs.clone()).size(20);
+        let logs = scrollable(column![logs_text].padding(30).spacing(20));
+        column![logs,bot_row].padding(30).spacing(20).into()
     }
     fn update(&mut self, message:Message){
         match message {
@@ -248,6 +267,12 @@ impl App{
                     }
                     MainPageMessage::Logs => {
                         return
+                    }
+                    MainPageMessage::Logout => {
+                        self.current_user = -1;
+                        self.active_tab = MainTab::Encrypt;
+                        self.maindata = Maindata::new();
+                        self.current_page = Page::SignupPage
                     }
                 }
             } 
