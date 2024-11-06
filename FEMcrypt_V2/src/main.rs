@@ -295,27 +295,25 @@ impl App{
         }
     }
     fn get_logs(&mut self) {
-        // match &self.connect{
-        //     Some(value) => {
-        //         let mut statement = value.prepare("SELECT id FROM userdata WHERE username = ? AND password = ?").unwrap();
-        //         statement.bind((1, user)).unwrap();
-        //         statement.bind((2, pass)).unwrap();
-        //         if let State::Row = statement.next().unwrap() {
-        //             let user_id = statement.read::<i64, _>(0).unwrap() as i32;
-        //             self.current_user = user_id;
-        //             println!("Logged in sucessfully as {}", user);
-        //             println!("User id to track now set as {}",self.current_user);
-        //             self.signin.err_msg = "".to_string();
-        //             self.current_page = Page::MainPage;
-        //         }else {
-        //             self.current_user = -1;
-        //             self.signin.err_msg = "Wrong username or password".to_string()
-        //         }
-        //     }
-        //     None => {
-        //         println!("Error establiching connection at check_data")
-        //     }
-        // }
+        match &self.connect{
+            Some(value) => {
+                let mut statement: sqlite::Statement<'_> = value.prepare("SELECT id FROM userdata WHERE id = ?").unwrap();
+                statement.bind((1, self.current_user as i64)).unwrap();
+                if let State::Row = statement.next().unwrap() {
+                    let user_id = statement.read::<i64, _>(0).unwrap() as i32;
+                    self.current_user = user_id;
+                    println!("User id to track now set as {}",self.current_user);
+                    self.signin.err_msg = "".to_string();
+                    self.current_page = Page::MainPage;
+                }else {
+                    self.current_user = -1;
+                    self.signin.err_msg = "Wrong username or password".to_string()
+                }
+            }
+            None => {
+                println!("Error establiching connection at check_data")
+            }
+        }
     }
     fn add_data(&mut self,user:&str,pass:&str) {
         if user.len() == 0 || pass.len() == 0{
