@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+iced_aw = "0.11.0"
 iced = {version = "0.13.1", features = ["debug"]}
 sqlite = "0.36.1"

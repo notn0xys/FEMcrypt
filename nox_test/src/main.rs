@@ -6,16 +6,20 @@ use iced::alignment::Vertical;
 use iced::widget::{
     self, button, center, checkbox, column, container, horizontal_space, keyed_column, row, text, text_input,vertical_space,Space
 };
-use iced::{self, Length,Center, Element, Fill, Font, Subscription, Task as Command, Theme, Renderer};
+use iced_aw::{TabLabel,TabBar};
+use iced::{self, Center, Color, Element, Fill, Font, Length, Renderer, Subscription, Task as Command, Theme};
 #[derive(Default)]
 struct Signup{
     username: String,
-    password: String
+    password: String,
+    err_msg:String
 }
 #[derive(Default)]
 struct Signin{
     username: String,
-    password: String
+    password: String,
+    err_msg:String
+
 }
 #[derive(Default)]
 struct App{
@@ -61,7 +65,8 @@ impl Signup {
     fn new() -> Self{
         Signup{
             username: "".to_string(),
-            password:"".to_string()
+            password:"".to_string(),
+            err_msg: "".to_string()
         }
     }
 }
@@ -69,7 +74,8 @@ impl Signin {
     fn new() -> Self{
         Signin{
             username: "".to_string(),
-            password:"".to_string()
+            password:"".to_string(),
+            err_msg: "".to_string()
         }
     }
 }
@@ -116,8 +122,9 @@ impl App{
                 .align_x(Center)
                 .width(Fill);
                 let signup: widget::Button<'_, Message, Theme, Renderer> = button("Create an Account").on_press(Message::SwitchPage(Page::SignupPage));
-                let track = row![horizontal_space(),signup];        
-                column![Space::new(30,30),title,username,password,submit_b,vertical_space(),track].spacing(50).padding(60).width(Fill).into()     
+                let track = row![horizontal_space(),signup];
+                let err_msg = text(self.signin.err_msg.clone()).align_x(Center).width(Fill).size(14).color(Color::from_rgba(255.0, 0.0, 30.0, 0.5));       
+                column![Space::new(30,30),title,username,password,submit_b,err_msg,track].spacing(50).padding(60).width(Fill).into()     
             }
             Page::SignupPage => {
                 
@@ -140,8 +147,9 @@ impl App{
                 .align_x(Center)
                 .width(Fill);
                 let signin: widget::Button<'_, Message, Theme, Renderer> = button("Already have an account? Sign in").on_press(Message::SwitchPage(Page::SigninPage));
-                let track = row![horizontal_space(),signin].align_y(Vertical::Bottom);        
-                column![Space::new(30,30),title,username,password,submit_b,vertical_space(),track].spacing(50).padding(60).width(Fill).into()     
+                let track = row![horizontal_space(),signin].align_y(Vertical::Bottom);
+                let err_msg = text(self.signup.err_msg.clone()).align_x(Center).width(Fill).size(14).color(Color::from_rgba(255.0, 0.0, 30.0, 0.5));       
+                column![Space::new(30,30),title,username,password,submit_b,err_msg,track].spacing(50).padding(60).width(Fill).into()     
             }
             Page::MainPage => {
                 button("Log out").on_press(Message::SwitchPage(Page::SignupPage)).into()
@@ -165,12 +173,13 @@ impl App{
                         self.add_data(&user, &pass);
                         self.signup.username = "".to_string();
                         self.signup.password = "".to_string();             
-                        self.current_page = Page::GenKeyPage
                     }
                 }
             }
             Message::SwitchPage(page) => {
-                self.current_page = page
+                self.current_page = page;
+                self.signin.err_msg = "".to_string();
+                self.signup.err_msg = "".to_string();
             }
             Message::MainPage(message) => {
                 match message{
@@ -203,14 +212,27 @@ impl App{
             }
         }
     }
-    fn add_data(&self,user:&str,pass:&str) {
+    fn add_data(&mut self,user:&str,pass:&str) {
+        if user.len() == 0 || pass.len() == 0{
+            self.signup.err_msg = "Invalid username or password".to_string();
+            return;
+        }
         if let Some(conn) = &self.connect {
-            let mut statement = conn.prepare("INSERT INTO userdata (username, password) VALUES (?, ?)")
-                .expect("Failed to prepare statement");
+            let mut statement = conn.prepare("SELECT id FROM userdata WHERE username = ?")
+            .expect("Failed to prepare select statement");
             statement.bind((1, user)).expect("Failed to bind username");
-            statement.bind((2, pass)).expect("Failed to bind password");
-            statement.next().expect("Failed to execute statement");
+        if statement.next().expect("Failed to execute SELECT statement") == sqlite::State::Row {
+            self.signup.err_msg = "Username already exists".to_string();
+            return;
+        }
+            let mut insert_state = conn.prepare("INSERT INTO userdata (username, password) VALUES (?, ?)")
+                .expect("Failed to prepare statement");
+            insert_state.bind((1, user)).expect("Failed to bind username");
+            insert_state.bind((2, pass)).expect("Failed to bind password");
+            insert_state.next().expect("Failed to execute statement");
             println!("User '{}' added successfully!", user);
+            self.signup.err_msg = "".to_string();
+            self.current_page = Page::GenKeyPage
         }
         
     }
@@ -225,10 +247,11 @@ impl App{
                     self.current_user = user_id;
                     println!("Logged in sucessfully as {}", user);
                     println!("User id to track now set as {}",self.current_user);
+                    self.signin.err_msg = "".to_string();
                     self.current_page = Page::MainPage;
                 }else {
                     self.current_user = -1;
-                    println!("Wrong username and pasword");
+                    self.signin.err_msg = "Wrong username or password".to_string()
                 }
             }
             None => {
@@ -261,5 +284,13 @@ pub fn main() -> iced::Result {
             password TEXT NOT NULL
         );"
     ).unwrap();
-    iced::application("Page switch", App::update, App::view).theme(theme).run_with(App::new)
+    path.execute(
+        "CREATE TABLE IF NOT EXISTS logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userid INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    FOREIGN KEY (userid) REFERENCES userdata(id)
+        );"
+    ).unwrap();
+    iced::application("Femcrypt", App::update, App::view).theme(theme).run_with(App::new)
 }
