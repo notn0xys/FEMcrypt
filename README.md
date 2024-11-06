@@ -16,7 +16,7 @@ I want to try and experiment with a database to simulate an actual app with user
 Clone the project
 
 ```bash
-  git clone https://github.com/notn0xys/Rust_proj
+  git clone https://github.com/notn0xys/FEMcrypt
 ```
 
 Go to the project directory
