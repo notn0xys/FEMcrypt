@@ -266,7 +266,7 @@ impl App{
                         return
                     }
                     MainPageMessage::Logs => {
-                        return
+                        self.get_logs();
                     }
                     MainPageMessage::Logout => {
                         self.current_user = -1;
@@ -294,7 +294,7 @@ impl App{
             }
         }
     }
-    fn get_logs(&self) {
+    fn get_logs(&mut self) {
         // match &self.connect{
         //     Some(value) => {
         //         let mut statement = value.prepare("SELECT id FROM userdata WHERE username = ? AND password = ?").unwrap();
