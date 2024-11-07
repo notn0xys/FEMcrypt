@@ -2280,6 +2280,7 @@ name = "nox_test"
 version = "0.1.0"
 dependencies = [
  "aes-gcm",
+ "hex",
  "iced",
  "iced_aw",
  "pem",

@@ -18,6 +18,7 @@ use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use rsa::pkcs1::{EncodeRsaPrivateKey, DecodeRsaPrivateKey,EncodeRsaPublicKey, DecodeRsaPublicKey};
 use std::env;
 use pem::parse;
+use hex;
 #[derive(Default)]
 struct Signup{
     username: String,
@@ -36,7 +37,8 @@ struct Maindata{
     logs:String,
     combined_key:Content,
     pub_key:String,
-    file:PathBuf
+    file:PathBuf,
+    nonce_string: String,
 
 }
 #[derive(Default)]
@@ -123,6 +125,7 @@ impl Maindata{
             logs: "".to_string(),
             combined_key: Content::new(),
             file: PathBuf::new(),
+            nonce_string: "".to_string()
 
         }
     }
@@ -322,7 +325,6 @@ impl App{
                                 let cipher = Aes256Gcm::new(&aes_key);
                                 let nonce = Aes256Gcm::generate_nonce(OsRng);
                                 let ciphertext = cipher.encrypt(&nonce, data.as_ref()).expect("Failed to encrypt data");
-                                //let temp = &self.maindata.pub_key[1..self.maindata.pub_key.len()-1];
                                 let public_key = match parse(self.maindata.pub_key.as_bytes()) {  
                                     Ok(pem) => {
                                         match RsaPublicKey::from_pkcs1_der(&pem.contents) {
@@ -348,6 +350,8 @@ impl App{
 
                                 fs::write(&encrypted_key_path, &encrypted_key).expect("Failed to write encrypted key");
                                 fs::write(&encrypted_data_path, &ciphertext).expect("Failed to write encrypted data");
+                                self.maindata.nonce_string = hex::encode(&nonce);
+                                println!("{}",self.maindata.nonce_string);
 
                                 println!("Encrypted key and data have been saved to {:?}", encrypted_folder);
                             }
