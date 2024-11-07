@@ -403,7 +403,13 @@ impl App{
                                 };
                                 let encrypted_key = fs::read(&self.maindata.decrpt.file2).expect("Failed to read encrypted key");
                                 let encrypted_data = fs::read(&self.maindata.decrpt.file1).expect("Failed to read encrypted data");
-                                let nonce_slice = hex::decode(&self.maindata.decrpt.nonce_string).expect("Failed to decode nonce");
+                                let nonce_slice = match hex::decode(&self.maindata.decrpt.nonce_string) {
+                                    Ok(nonce) => nonce,
+                                    Err(e) => {
+                                        println!("Failed to decode nonce: {:?}", e);
+                                        return;  // Exit early if nonce decoding fails
+                                    }
+                                };
                                 let nonce = Nonce::from_slice(&nonce_slice);
 
                                 let aes_key = match private_key.decrypt(Pkcs1v15Encrypt, &encrypted_key) {
