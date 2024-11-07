@@ -69,7 +69,8 @@ enum MainTab {
 enum EncryptPage{
     ChooseFile,
     UpdateKey(String),
-    Encryptdata
+    Encryptdata,
+    UpdateWithnoinput(String)
 }
 #[derive(Debug, Clone)]
 enum MainPageMessage{
@@ -248,11 +249,11 @@ impl App{
         .size(30)
         .align_x(Center);
         let nounce_txt = text_input("Nounce Output", &self.maindata.nonce_string).id("text_input")
-        .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateKey(input))))                    
+        .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateWithnoinput(input))))                    
         .padding(30)
         .size(30)
         .align_x(Center);
-        let reminder = text(&self.maindata.reminder).align_x(Center).width(Fill).size(14).color(Color::from_rgba(255.0, 0.0, 30.0, 0.5));
+        let reminder = text(&self.maindata.reminder).size(12).align_x(Center).width(Fill).size(14).color(Color::from_rgba(255.0, 0.0, 30.0, 0.5));
         let swap_btn = container(button("Get key!").on_press(Message::SwitchPage(Page::GenKeyPage))).padding(30).align_x(Center);
         let row_1 = row![file_btn,horizontal_space(),encrypt_btn].padding(30);
         column![
@@ -324,6 +325,7 @@ impl App{
                     }
                     MainPageMessage::Encrypt(msg) => {
                         match msg {
+                            EncryptPage::UpdateWithnoinput(msg) => {}
                             EncryptPage::ChooseFile => {
                                 if let Some(file) = FileDialog::new().pick_file() {
                                     self.maindata.file = file;
