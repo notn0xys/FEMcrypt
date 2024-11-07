@@ -233,7 +233,6 @@ impl App{
             row_1,
             text("Encryption Method").size(20),
             swap_btn,
-            button("One-time key").on_press(Message::MainPage(MainPageMessage::Encrypt))
         ]
         .padding(30)
         .spacing(10)
