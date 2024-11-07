@@ -370,13 +370,58 @@ impl App{
                     MainPageMessage::Decrypt(msg) => {
                         match msg{
                             DecryptPage::ChooseFile1 => {
+                                if let Some(file) = FileDialog::new().pick_file() {
+                                    self.maindata.decrpt.file1 = file;
+                                }
 
                             }
                             DecryptPage::ChooseFile2 => {
+                                if let Some(file) = FileDialog::new().pick_file() {
+                                    self.maindata.decrpt.file2 = file;
+                                }
 
                             }
                             DecryptPage::DecryptData => {
+                                if !self.maindata.decrpt.file1.exists() || !self.maindata.decrpt.file2.exists() {
+                                    println!("Error: One or both files have not been selected or cannot be found.");
+                                    return;  // Early exit if one or both files don't exist
+                                }
+                                let private_key = match parse(self.maindata.decrpt.private_key.as_bytes()) {
+                                    Ok(pem) => {
+                                        match RsaPrivateKey::from_pkcs1_der(&pem.contents) {
+                                            Ok(key) => key, // Successful parsing of RSAPrivateKey
+                                            Err(e) => {
+                                                println!("Failed to parse private key: {:?}", e);
+                                                return;  // Exit early if parsing fails
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        println!("Failed to parse PEM: {:?}", e);
+                                        return;  // Exit early if PEM parsing fails
+                                    }
+                                };
+                                let encrypted_key = fs::read(&self.maindata.decrpt.file2).expect("Failed to read encrypted key");
+                                let encrypted_data = fs::read(&self.maindata.decrpt.file1).expect("Failed to read encrypted data");
+                                let nonce_slice = hex::decode(&self.maindata.decrpt.nonce_string).expect("Failed to decode nonce");
+                                let nonce = Nonce::from_slice(&nonce_slice);
 
+                                let aes_key = match private_key.decrypt(Pkcs1v15Encrypt, &encrypted_key) {
+                                    Ok(key) => key, // Successful decryption of AES key
+                                    Err(e) => {
+                                        println!("Failed to decrypt AES key: {:?}", e);
+                                        return;  // Exit early if decryption fails
+                                    }
+                                };
+                                let cipher = Aes256Gcm::new_from_slice(&aes_key).unwrap();
+                                let decrypted_data = cipher.decrypt(&nonce, encrypted_data.as_ref()).expect("Failed to decrypt data");
+                                let downloads_dir = env::home_dir().unwrap().join("Downloads");
+                                let decrypted_folder = downloads_dir.join("decrypted_folder");
+                                fs::create_dir_all(&decrypted_folder).expect("Failed to create decrypted folder");
+                                let decrypted_path = decrypted_folder.join("decrypted_data.bin");
+                                fs::write(&decrypted_path, &decrypted_data).expect("Failed to write decrypted data");
+                                println!("Decrypted data has been saved to {:?}", decrypted_folder);
+                                
                             }
                             DecryptPage::UpdateNounce(msg) => {
                                 self.maindata.decrpt.nonce_string = msg
