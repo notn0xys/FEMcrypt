@@ -297,17 +297,16 @@ impl App{
     fn get_logs(&mut self) {
         match &self.connect{
             Some(value) => {
-                let mut statement: sqlite::Statement<'_> = value.prepare("SELECT id FROM userdata WHERE id = ?").unwrap();
+                let mut statement = value.prepare("
+                    SELECT userdata.username, logs.action 
+                    FROM logs 
+                    JOIN userdata ON logs.userid = userdata.id 
+                    WHERE logs.userid = ?").unwrap();
                 statement.bind((1, self.current_user as i64)).unwrap();
-                if let State::Row = statement.next().unwrap() {
-                    let user_id = statement.read::<i64, _>(0).unwrap() as i32;
-                    self.current_user = user_id;
-                    println!("User id to track now set as {}",self.current_user);
-                    self.signin.err_msg = "".to_string();
-                    self.current_page = Page::MainPage;
-                }else {
-                    self.current_user = -1;
-                    self.signin.err_msg = "Wrong username or password".to_string()
+                while let sqlite::State::Row = statement.next().unwrap() {
+                    let username: String = statement.read(0).unwrap();
+                    let action: String = statement.read(1).unwrap(); 
+                    self.maindata.logs.push_str(&format!("User: {}, Action: {}\n", username, action));
                 }
             }
             None => {
