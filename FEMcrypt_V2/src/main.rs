@@ -39,6 +39,7 @@ struct Maindata{
     pub_key:String,
     file:PathBuf,
     nonce_string: String,
+    reminder:String,
 
 }
 #[derive(Default)]
@@ -125,7 +126,9 @@ impl Maindata{
             logs: "".to_string(),
             combined_key: Content::new(),
             file: PathBuf::new(),
-            nonce_string: "".to_string()
+            nonce_string: "".to_string(),
+            reminder: "".to_string()
+
 
         }
     }
@@ -244,21 +247,23 @@ impl App{
         .padding(30)
         .size(30)
         .align_x(Center);
-        let nounce_txt = text_input("Key", &self.maindata.nonce_string).id("text_input")
+        let nounce_txt = text_input("Nounce Output", &self.maindata.nonce_string).id("text_input")
         .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateKey(input))))                    
         .padding(30)
         .size(30)
         .align_x(Center);
+        let reminder = text(&self.maindata.reminder).align_x(Center).width(Fill).size(14).color(Color::from_rgba(255.0, 0.0, 30.0, 0.5));
         let swap_btn = container(button("Get key!").on_press(Message::SwitchPage(Page::GenKeyPage))).padding(30).align_x(Center);
         let row_1 = row![file_btn,horizontal_space(),encrypt_btn].padding(30);
         column![
             row_1,
             input_key,
             swap_btn,
-            nounce_txt
+            nounce_txt,
+            reminder,
         ]
         .padding(30)
-        .spacing(10)
+        .spacing(20)
         .into()
     }
 
@@ -361,8 +366,8 @@ impl App{
                                 fs::write(&encrypted_key_path, &encrypted_key).expect("Failed to write encrypted key");
                                 fs::write(&encrypted_data_path, &ciphertext).expect("Failed to write encrypted data");
                                 self.maindata.nonce_string = hex::encode(&nonce);
+                                self.maindata.reminder = "Dont forget to copy and send your nonce! it is used for decryption".to_string();
                                 println!("{}",self.maindata.nonce_string);
-                                
                                 println!("Encrypted key and data have been saved to {:?}", encrypted_folder);
                             }
                             EncryptPage::UpdateKey(msg) => {
