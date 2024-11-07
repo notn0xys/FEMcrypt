@@ -219,7 +219,6 @@ impl App{
                 let pub_k = text_editor(&self.maindata.combined_key).placeholder("Press Generate key to get a key").on_action(Message::Edit);
                 let bot_row = row![b1,horizontal_space(),b2];
                 scrollable(column![pub_k,bot_row].padding(20).spacing(20)).into()
-
             }
         }
     }
