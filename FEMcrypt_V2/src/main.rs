@@ -34,6 +34,7 @@ struct Signin{
 struct Maindata{
     logs:String,
     combined_key:Content,
+    pub_key:String,
 
 }
 #[derive(Default)]
@@ -59,12 +60,18 @@ enum MainTab {
     Decrypt,
     Logs,
 }
+#[derive(Debug,Clone)]
+enum EncryptPage{
+    ChooseFile,
+    UpdateKey(String),
+    Encryptdata
+}
 #[derive(Debug, Clone)]
 enum MainPageMessage{
-    Encrypt,
+    Encrypt(EncryptPage),
     Decrypt,
     Logs,
-    Logout
+    Logout,
 }
 #[derive(Debug, Clone)]
 enum SigninPageMessage{
@@ -110,6 +117,7 @@ impl Signin {
 impl Maindata{
     fn new() -> Self{
         Maindata{
+            pub_key: "".to_string(),
             logs: "".to_string(),
             combined_key: Content::new()
 
@@ -223,10 +231,9 @@ impl App{
         }
     }
     fn view_encrypt_tab(&self) -> Element<Message> {
-        let file_btn: widget::Button<'_, Message> = button("Choose File").on_press(Message::MainPage(MainPageMessage::Encrypt));
-        let choose_folder: widget::Button<'_, Message> = button("Choose Folder").on_press(Message::MainPage(MainPageMessage::Encrypt));
+        let file_btn: widget::Button<'_, Message> = button("Choose File").on_press(Message::MainPage(MainPageMessage::Encrypt(EncryptPage::ChooseFile)));
         let swap_btn = button("Get key!").on_press(Message::SwitchPage(Page::GenKeyPage));
-        let row_1 = row![file_btn,horizontal_space(),choose_folder].padding(30);
+        let row_1 = row![file_btn,horizontal_space()].padding(30);
         
         column![
             row_1,
@@ -293,8 +300,18 @@ impl App{
                     MainPageMessage::Decrypt => {
                         return
                     }
-                    MainPageMessage::Encrypt => {
-                        return
+                    MainPageMessage::Encrypt(msg) => {
+                        match msg {
+                            EncryptPage::ChooseFile => {
+
+                            }
+                            EncryptPage::Encryptdata => {
+
+                            }
+                            EncryptPage::UpdateKey(msg) => {
+                                
+                            }
+                        }
                     }
                     MainPageMessage::Logs => {
                         self.get_logs();
