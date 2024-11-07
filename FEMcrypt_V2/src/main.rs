@@ -4,10 +4,19 @@ use std::fs;
 use std::fs::File;
 use iced::alignment::Vertical;
 use iced::widget::{
-    self, button, center, checkbox, column, container, horizontal_space, keyed_column, row, text, text_input,vertical_space,Space,scrollable
+    self, button, center, checkbox, column, container, horizontal_space, keyed_column, row, scrollable, text, text_editor, text_input, vertical_space, Space
 };
+use iced::widget::text_editor::{Content};
 use iced_aw::{TabLabel,TabBar};
 use iced::{self, Center, Color, Element, Fill, Font, Length, Renderer, Subscription, Task as Command, Theme};
+use rfd::FileDialog;
+use aes_gcm::{
+    aead::{Aead, AeadCore, KeyInit, OsRng},
+    Aes256Gcm, Nonce,
+};
+use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
+use rsa::pkcs1::{EncodeRsaPrivateKey, DecodeRsaPrivateKey,EncodeRsaPublicKey, DecodeRsaPublicKey};
+use std::env;
 #[derive(Default)]
 struct Signup{
     username: String,
@@ -23,7 +32,9 @@ struct Signin{
 }
 #[derive(Default)]
 struct Maindata{
-    logs:String
+    logs:String,
+    combined_key:Content,
+
 }
 #[derive(Default)]
 struct App{
@@ -74,6 +85,9 @@ enum Message{
     Signin(SigninPageMessage),
     MainPage(MainPageMessage),
     MainPageTabSelected(MainTab),
+    GenKeyMessage,
+    Edit(text_editor::Action),
+
 }
 impl Signup {
     fn new() -> Self{
@@ -96,7 +110,9 @@ impl Signin {
 impl Maindata{
     fn new() -> Self{
         Maindata{
-            logs: "".to_string()
+            logs: "".to_string(),
+            combined_key: Content::new()
+
         }
     }
 }
@@ -198,7 +214,12 @@ impl App{
                 column![tabs, content].into()
             }
             Page::GenKeyPage => {
-                button("Switch to main").on_press(Message::SwitchPage(Page::MainPage),).into()
+                let b1 = button("Switch to main").on_press(Message::SwitchPage(Page::MainPage));
+                let b2 = button("Gen Key").on_press(Message::GenKeyMessage,);
+                let pub_k = text_editor(&self.maindata.combined_key).placeholder("Press Generate key to get a key").on_action(Message::Edit);
+                let bot_row = row![b1,horizontal_space(),b2];
+                scrollable(column![pub_k,bot_row].padding(20).spacing(20)).into()
+
             }
         }
     }
@@ -239,6 +260,12 @@ impl App{
     }
     fn update(&mut self, message:Message){
         match message {
+            Message::Edit(action) => {
+                self.maindata.combined_key.perform(action);
+            }
+            Message::GenKeyMessage =>{
+                self.gen_key();
+            }
             Message::MainPageTabSelected(tab) => {
                 self.active_tab = tab;
             }
@@ -366,9 +393,15 @@ impl App{
             }
         }
     }
-    fn gen_key(&self) {
-        
-    }
+    fn gen_key(&mut self) {
+        let mut rng = rand::thread_rng();
+        let private_key = RsaPrivateKey::new(&mut rng, 4096).expect("Failed to generate a private key");
+        let public_key = RsaPublicKey::from(&private_key);
+        let s1 = private_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::CRLF).expect("Failed to convert private key to PKCS1 PEM").to_string();
+        let s2 = public_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::CRLF).expect("Failed to convert public key to PKCS1 PEM").to_string();
+        let combined = format!("{} \n {}",s1,s2);
+        self.maindata.combined_key = Content::with_text(&combined);
+    }       
 }    
     fn theme(app: &App) -> Theme {
     Theme::Dracula
