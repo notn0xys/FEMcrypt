@@ -33,6 +33,14 @@ struct Signin{
 
 }
 #[derive(Default)]
+struct Decryptdata{
+    file1:PathBuf,
+    file2:PathBuf,
+    nonce_string: String,
+    error:String,
+    private_key:String
+}
+#[derive(Default)]
 struct Maindata{
     logs:String,
     combined_key:Content,
@@ -40,6 +48,7 @@ struct Maindata{
     file:PathBuf,
     nonce_string: String,
     reminder:String,
+    decrpt:Decryptdata
 
 }
 #[derive(Default)]
@@ -72,10 +81,18 @@ enum EncryptPage{
     Encryptdata,
     UpdateWithnoinput(String)
 }
+#[derive(Debug,Clone)]
+enum DecryptPage{
+    ChooseFile1,
+    ChooseFile2,
+    UpdateKey(String),
+    UpdateNounce(String),
+    DecryptData,
+}
 #[derive(Debug, Clone)]
 enum MainPageMessage{
     Encrypt(EncryptPage),
-    Decrypt,
+    Decrypt(DecryptPage),
     Logs,
     Logout,
 }
@@ -101,6 +118,17 @@ enum Message{
     GenKeyMessage,
     Edit(text_editor::Action),
 
+}
+impl Decryptdata{
+    fn new() -> Self{
+        Decryptdata{
+            file1:PathBuf::new(),
+            file2:PathBuf::new(),
+            error: "".to_string(),
+            nonce_string: "".to_string(),
+            private_key: "".to_string()
+        }
+    }
 }
 impl Signup {
     fn new() -> Self{
@@ -128,7 +156,8 @@ impl Maindata{
             combined_key: Content::new(),
             file: PathBuf::new(),
             nonce_string: "".to_string(),
-            reminder: "".to_string()
+            reminder: "".to_string(),
+            decrpt:Decryptdata::new()
 
 
         }
@@ -245,12 +274,12 @@ impl App{
         let encrypt_btn = button("Encyrpt").on_press(Message::MainPage(MainPageMessage::Encrypt(EncryptPage::Encryptdata)));
         let input_key = text_input("Key", &self.maindata.pub_key).id("text_input")
         .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateKey(input))))                    
-        .padding(30)
+        .padding(50)
         .size(30)
         .align_x(Center);
         let nounce_txt = text_input("Nounce Output", &self.maindata.nonce_string).id("text_input")
         .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateWithnoinput(input))))                    
-        .padding(30)
+        .padding(50)
         .size(30)
         .align_x(Center);
         let reminder = text(&self.maindata.reminder).size(12).align_x(Center).width(Fill).size(14).color(Color::from_rgba(255.0, 0.0, 30.0, 0.5));
@@ -269,13 +298,31 @@ impl App{
     }
 
     fn view_decrypt_tab(&self) -> Element<Message> {
+        let encrypted_btn = button("Choose Encrypted Data").on_press(Message::MainPage(MainPageMessage::Decrypt(DecryptPage::ChooseFile1)));
+        let encrypted_key = button("Choose Encrypted Key").on_press(Message::MainPage(MainPageMessage::Decrypt(DecryptPage::ChooseFile2)));
+        let row = row![encrypted_btn,horizontal_space(),encrypted_key].padding(30);
+        let decrypt_btn = container(button("Decrypt").on_press(Message::MainPage(MainPageMessage::Decrypt(DecryptPage::DecryptData)))).padding(30);
+        let nounce = text_input("Nounce Input", &self.maindata.decrpt.nonce_string).id("Nounce input")
+        .on_input(|input: String| Message::MainPage(MainPageMessage::Decrypt(DecryptPage::UpdateNounce(input))))               
+        .padding(50)
+        .size(30)
+        .align_x(Center);
+        let key = text_input("Key Input", &self.maindata.decrpt.private_key).id("Key input")
+        .on_input(|input: String| Message::MainPage(MainPageMessage::Decrypt(DecryptPage::UpdateKey(input))))               
+        .padding(50)
+        .size(30)
+        .align_x(Center);
+        let warning = text(&self.maindata.decrpt.error).size(12).align_x(Center).width(Fill).size(14).color(Color::from_rgba(255.0, 0.0, 30.0, 0.5));
         column![
-            button("Choose File").on_press(Message::MainPage(MainPageMessage::Decrypt)),
-            button("Choose Folder").on_press(Message::MainPage(MainPageMessage::Decrypt)),
-            text("Decryption Method").size(20),
-            button("Master Key").on_press(Message::MainPage(MainPageMessage::Decrypt))
+            row,
+            key,
+            Space::new(30,30),
+            nounce,
+            decrypt_btn,
+            warning
         ]
-        .spacing(10)
+        .padding(35)
+        .spacing(30)
         .into()
     }
 
@@ -320,8 +367,24 @@ impl App{
             }
             Message::MainPage(message) => {
                 match message{
-                    MainPageMessage::Decrypt => {
-                        return
+                    MainPageMessage::Decrypt(msg) => {
+                        match msg{
+                            DecryptPage::ChooseFile1 => {
+
+                            }
+                            DecryptPage::ChooseFile2 => {
+
+                            }
+                            DecryptPage::DecryptData => {
+
+                            }
+                            DecryptPage::UpdateNounce(msg) => {
+                                self.maindata.decrpt.nonce_string = msg
+                            }
+                            DecryptPage::UpdateKey(msg) => {
+                                self.maindata.decrpt.private_key = msg
+                            }
+                        }
                     }
                     MainPageMessage::Encrypt(msg) => {
                         match msg {
