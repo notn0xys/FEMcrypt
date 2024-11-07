@@ -319,6 +319,10 @@ impl App{
                                 }
                             }
                             EncryptPage::Encryptdata => {
+                                if !self.maindata.file.exists() {
+                                    println!("Error: The file has not been selected or cannot be found.");
+                                    return;  // Early exit if the file doesn't exist
+                                }
                                 let mut rng = rand::thread_rng();
                                 let data = fs::read(&self.maindata.file).expect("Failed to read file");
                                 let aes_key = Aes256Gcm::generate_key(OsRng);
