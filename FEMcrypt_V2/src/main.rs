@@ -234,12 +234,17 @@ impl App{
     }
     fn view_encrypt_tab(&self) -> Element<Message> {
         let file_btn: widget::Button<'_, Message> = button("Choose File").on_press(Message::MainPage(MainPageMessage::Encrypt(EncryptPage::ChooseFile)));
-        let swap_btn = button("Get key!").on_press(Message::SwitchPage(Page::GenKeyPage));
-        let row_1 = row![file_btn,horizontal_space()].padding(30);
-        
+        let encrypt_btn = button("Encyrpt").on_press(Message::MainPage(MainPageMessage::Encrypt(EncryptPage::Encryptdata)));
+        let input_key = text_input("Key", &self.maindata.pub_key).id("text_input")
+        .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateKey(input))))                    
+        .padding(15)
+        .size(30)
+        .align_x(Center);
+        let swap_btn = container(button("Get key!").on_press(Message::SwitchPage(Page::GenKeyPage))).padding(30).align_x(Center);
+        let row_1 = row![file_btn,horizontal_space(),encrypt_btn].padding(30);
         column![
             row_1,
-            text("Encryption Method").size(20),
+            input_key,
             swap_btn,
         ]
         .padding(30)
@@ -315,7 +320,6 @@ impl App{
                                 let aes_key = Aes256Gcm::generate_key(OsRng);
                                 let cipher = Aes256Gcm::new(&aes_key);
                                 let nonce = Aes256Gcm::generate_nonce(OsRng);
-
                                 let ciphertext = cipher.encrypt(&nonce, data.as_ref()).expect("Failed to encrypt data");
                                 let public_key = RsaPublicKey::from_pkcs1_pem(&self.maindata.pub_key).expect("Failed to parse public key");
                                 let encrypted_key = public_key.encrypt(&mut rng, Pkcs1v15Encrypt, &aes_key).expect("Failed to encrypt AES key");
@@ -332,7 +336,7 @@ impl App{
                                 println!("Encrypted key and data have been saved to {:?}", encrypted_folder);
                             }
                             EncryptPage::UpdateKey(msg) => {
-                                
+                                self.maindata.pub_key = msg
                             }
                         }
                     }
