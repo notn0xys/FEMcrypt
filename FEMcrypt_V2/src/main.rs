@@ -415,10 +415,10 @@ impl App{
                                 };
                                 let cipher = Aes256Gcm::new_from_slice(&aes_key).unwrap();
                                 let decrypted_data = cipher.decrypt(&nonce, encrypted_data.as_ref()).expect("Failed to decrypt data");
-                                let downloads_dir = env::home_dir().unwrap().join("Downloads");
+                                let downloads_dir = env::home_dir().unwrap().join("Documents");
                                 let decrypted_folder = downloads_dir.join("decrypted_folder");
                                 fs::create_dir_all(&decrypted_folder).expect("Failed to create decrypted folder");
-                                let decrypted_path = decrypted_folder.join("decrypted_data.bin");
+                                let decrypted_path = decrypted_folder.join("decrypted_data.txt");
                                 fs::write(&decrypted_path, &decrypted_data).expect("Failed to write decrypted data");
                                 println!("Decrypted data has been saved to {:?}", decrypted_folder);
                                 
@@ -466,7 +466,7 @@ impl App{
                                     }
                                 };
                                 let encrypted_key = public_key.encrypt(&mut rng, Pkcs1v15Encrypt, &aes_key).expect("Failed to encrypt AES key");
-                                let downloads_dir = env::home_dir().unwrap().join("Downloads");
+                                let downloads_dir = env::home_dir().unwrap().join("Documents");
                                 let encrypted_folder = downloads_dir.join("encrypted_folder");
                                 fs::create_dir_all(&encrypted_folder).expect("Failed to create encrypted folder");
 
