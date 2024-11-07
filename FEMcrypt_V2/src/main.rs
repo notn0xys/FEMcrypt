@@ -419,7 +419,7 @@ pub fn main() -> iced::Result {
     }
     let path = sqlite::open("data/app.db").unwrap();
     path.execute(
- "CREATE TABLE IF NOT EXISTS userdata (
+"CREATE TABLE IF NOT EXISTS userdata (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
             password TEXT NOT NULL
