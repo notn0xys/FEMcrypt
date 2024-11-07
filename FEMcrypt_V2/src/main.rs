@@ -17,6 +17,7 @@ use aes_gcm::{
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use rsa::pkcs1::{EncodeRsaPrivateKey, DecodeRsaPrivateKey,EncodeRsaPublicKey, DecodeRsaPublicKey};
 use std::env;
+use pem::parse;
 #[derive(Default)]
 struct Signup{
     username: String,
@@ -321,7 +322,22 @@ impl App{
                                 let cipher = Aes256Gcm::new(&aes_key);
                                 let nonce = Aes256Gcm::generate_nonce(OsRng);
                                 let ciphertext = cipher.encrypt(&nonce, data.as_ref()).expect("Failed to encrypt data");
-                                let public_key = RsaPublicKey::from_pkcs1_pem(&self.maindata.pub_key).expect("Failed to parse public key");
+                                //let temp = &self.maindata.pub_key[1..self.maindata.pub_key.len()-1];
+                                let public_key = match parse(self.maindata.pub_key.as_bytes()) {  
+                                    Ok(pem) => {
+                                        match RsaPublicKey::from_pkcs1_der(&pem.contents) {
+                                            Ok(key) => key, // Successful parsing of RSAPublicKey
+                                            Err(e) => {
+                                                println!("Failed to parse public key: {:?}", e);
+                                                return;  // Exit early if parsing fails
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        println!("Failed to parse PEM: {:?}", e);
+                                        return;  // Exit early if PEM parsing fails
+                                    }
+                                };
                                 let encrypted_key = public_key.encrypt(&mut rng, Pkcs1v15Encrypt, &aes_key).expect("Failed to encrypt AES key");
                                 let downloads_dir = env::home_dir().unwrap().join("Downloads");
                                 let encrypted_folder = downloads_dir.join("encrypted_folder");
@@ -336,7 +352,7 @@ impl App{
                                 println!("Encrypted key and data have been saved to {:?}", encrypted_folder);
                             }
                             EncryptPage::UpdateKey(msg) => {
-                                self.maindata.pub_key = msg
+                                self.maindata.pub_key = msg;
                             }
                         }
                     }
@@ -365,7 +381,7 @@ impl App{
                         self.signin.username = "".to_string();
                         self.signin.password = "".to_string()                     
                     }
-                 }  
+                }  
             }
         }
     }
@@ -438,11 +454,11 @@ impl App{
     }
     fn gen_key(&mut self) {
         let mut rng = rand::thread_rng();
-        let private_key = RsaPrivateKey::new(&mut rng, 4096).expect("Failed to generate a private key");
+        let private_key = RsaPrivateKey::new(&mut rng, 2048).expect("Failed to generate a private key");
         let public_key = RsaPublicKey::from(&private_key);
         let s1 = private_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::CRLF).expect("Failed to convert private key to PKCS1 PEM").to_string();
         let s2 = public_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::CRLF).expect("Failed to convert public key to PKCS1 PEM").to_string();
-        let combined = format!("{} \n {}",s1,s2);
+        let combined = format!("{}\n{}",s1,s2);
         self.maindata.combined_key = Content::with_text(&combined);
     }       
 }    
@@ -461,7 +477,7 @@ pub fn main() -> iced::Result {
     }
     let path = sqlite::open("data/app.db").unwrap();
     path.execute(
- "CREATE TABLE IF NOT EXISTS userdata (
+"CREATE TABLE IF NOT EXISTS userdata (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
             password TEXT NOT NULL
