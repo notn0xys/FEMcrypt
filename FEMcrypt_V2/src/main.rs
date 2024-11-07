@@ -42,9 +42,9 @@ enum Page{
     MainPage,
     GenKeyPage,
 }
-#[derive(Default,Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MainTab {
-    #[default]Encrypt,
+    Encrypt,
     Decrypt,
     Logs,
 }
@@ -98,6 +98,11 @@ impl Maindata{
         Maindata{
             logs: "".to_string()
         }
+    }
+}
+impl Default for MainTab{
+    fn default() -> Self {
+        MainTab::Encrypt
     }
 }
 impl App{
@@ -366,7 +371,7 @@ impl App{
     }
 }    
     fn theme(app: &App) -> Theme {
-    Theme::TokyoNight
+    Theme::Dracula
     }
 
 pub fn main() -> iced::Result {
