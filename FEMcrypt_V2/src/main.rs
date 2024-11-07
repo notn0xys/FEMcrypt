@@ -226,12 +226,13 @@ impl App{
     fn view_encrypt_tab(&self) -> Element<Message> {
         let file_btn: widget::Button<'_, Message> = button("Choose File").on_press(Message::MainPage(MainPageMessage::Encrypt));
         let choose_folder: widget::Button<'_, Message> = button("Choose Folder").on_press(Message::MainPage(MainPageMessage::Encrypt));
-
+        let swap_btn = button("Get key!").on_press(Message::SwitchPage(Page::GenKeyPage));
         let row_1 = row![file_btn,horizontal_space(),choose_folder].padding(30);
         
         column![
             row_1,
             text("Encryption Method").size(20),
+            swap_btn,
             button("One-time key").on_press(Message::MainPage(MainPageMessage::Encrypt))
         ]
         .padding(30)
