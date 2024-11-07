@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use sqlite::{Connection,Value,State};
 use std::fs;
 use std::fs::File;
@@ -35,6 +35,7 @@ struct Maindata{
     logs:String,
     combined_key:Content,
     pub_key:String,
+    file:PathBuf
 
 }
 #[derive(Default)]
@@ -119,7 +120,8 @@ impl Maindata{
         Maindata{
             pub_key: "".to_string(),
             logs: "".to_string(),
-            combined_key: Content::new()
+            combined_key: Content::new(),
+            file: PathBuf::new(),
 
         }
     }
@@ -303,10 +305,31 @@ impl App{
                     MainPageMessage::Encrypt(msg) => {
                         match msg {
                             EncryptPage::ChooseFile => {
-
+                                if let Some(file) = FileDialog::new().pick_file() {
+                                    self.maindata.file = file;
+                                }
                             }
                             EncryptPage::Encryptdata => {
+                                let mut rng = rand::thread_rng();
+                                let data = fs::read(&self.maindata.file).expect("Failed to read file");
+                                let aes_key = Aes256Gcm::generate_key(OsRng);
+                                let cipher = Aes256Gcm::new(&aes_key);
+                                let nonce = Aes256Gcm::generate_nonce(OsRng);
 
+                                let ciphertext = cipher.encrypt(&nonce, data.as_ref()).expect("Failed to encrypt data");
+                                let public_key = RsaPublicKey::from_pkcs1_pem(&self.maindata.pub_key).expect("Failed to parse public key");
+                                let encrypted_key = public_key.encrypt(&mut rng, Pkcs1v15Encrypt, &aes_key).expect("Failed to encrypt AES key");
+                                let downloads_dir = env::home_dir().unwrap().join("Downloads");
+                                let encrypted_folder = downloads_dir.join("encrypted_folder");
+                                fs::create_dir_all(&encrypted_folder).expect("Failed to create encrypted folder");
+
+                                let encrypted_key_path = encrypted_folder.join("encrypted_key.bin");
+                                let encrypted_data_path = encrypted_folder.join("encrypted_data.bin");
+
+                                fs::write(&encrypted_key_path, &encrypted_key).expect("Failed to write encrypted key");
+                                fs::write(&encrypted_data_path, &ciphertext).expect("Failed to write encrypted data");
+
+                                println!("Encrypted key and data have been saved to {:?}", encrypted_folder);
                             }
                             EncryptPage::UpdateKey(msg) => {
                                 
