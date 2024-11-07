@@ -241,7 +241,12 @@ impl App{
         let encrypt_btn = button("Encyrpt").on_press(Message::MainPage(MainPageMessage::Encrypt(EncryptPage::Encryptdata)));
         let input_key = text_input("Key", &self.maindata.pub_key).id("text_input")
         .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateKey(input))))                    
-        .padding(15)
+        .padding(30)
+        .size(30)
+        .align_x(Center);
+        let nounce_txt = text_input("Key", &self.maindata.nonce_string).id("text_input")
+        .on_input(|input: String| Message::MainPage(MainPageMessage::Encrypt(EncryptPage::UpdateKey(input))))                    
+        .padding(30)
         .size(30)
         .align_x(Center);
         let swap_btn = container(button("Get key!").on_press(Message::SwitchPage(Page::GenKeyPage))).padding(30).align_x(Center);
@@ -250,6 +255,7 @@ impl App{
             row_1,
             input_key,
             swap_btn,
+            nounce_txt
         ]
         .padding(30)
         .spacing(10)
@@ -356,7 +362,7 @@ impl App{
                                 fs::write(&encrypted_data_path, &ciphertext).expect("Failed to write encrypted data");
                                 self.maindata.nonce_string = hex::encode(&nonce);
                                 println!("{}",self.maindata.nonce_string);
-
+                                
                                 println!("Encrypted key and data have been saved to {:?}", encrypted_folder);
                             }
                             EncryptPage::UpdateKey(msg) => {
