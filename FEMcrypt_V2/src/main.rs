@@ -1,12 +1,7 @@
-<<<<<<< Updated upstream
-
-use sqlite::{Connection,Value,State};
-=======
 use std::path::{Path, PathBuf};
 use sqlite::{Connection,State};
 use std::fs;
 use std::fs::File;
->>>>>>> Stashed changes
 use iced::alignment::Vertical;
 use iced::widget::{
     self, button, column, container, horizontal_space, row, scrollable, text, text_editor, text_input, Space
@@ -15,9 +10,6 @@ use iced::widget::text_editor::Content;
 use iced_aw::{TabLabel,TabBar};
 use iced::{self, Center, Color, Element, Fill, Length, Renderer, Task as Command, Theme};
 use rfd::FileDialog;
-use std::fs;
-use std::fs::File;
-use std::path::{Path, PathBuf};
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
     Aes256Gcm, Nonce,
