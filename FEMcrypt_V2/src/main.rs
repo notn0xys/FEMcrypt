@@ -555,10 +555,10 @@ impl App{
             let mut statement = conn.prepare("SELECT id FROM userdata WHERE username = ?")
             .expect("Failed to prepare select statement");
             statement.bind((1, user)).expect("Failed to bind username");
-        if statement.next().expect("Failed to execute SELECT statement") == sqlite::State::Row {
+            if statement.next().expect("Failed to execute SELECT statement") == sqlite::State::Row {
             self.signup.err_msg = "Username already exists".to_string();
             return;
-        }
+            }
             let mut insert_state = conn.prepare("INSERT INTO userdata (username, password) VALUES (?, ?)")
                 .expect("Failed to prepare statement");
             insert_state.bind((1, user)).expect("Failed to bind username");
@@ -566,6 +566,18 @@ impl App{
             insert_state.next().expect("Failed to execute statement");
             println!("User '{}' added successfully!", user);
             self.signup.err_msg = "".to_string();
+            let mut get_id = conn.prepare("SELECT id FROM userdata WHERE username = ? AND password = ?").unwrap();
+            get_id.bind((1, user)).unwrap();
+            get_id.bind((2, pass)).unwrap();
+            if let State::Row = get_id.next().unwrap() {
+                let user_id = get_id.read::<i64, _>(0).unwrap() as i32;
+                self.current_user = user_id;
+                println!("User id to track now set as {}",self.current_user);
+            }else {
+                self.current_user = -1;
+                self.signup.err_msg = "Failed to track".to_string()
+            }
+            
             self.current_page = Page::GenKeyPage
         }
         
