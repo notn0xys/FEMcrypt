@@ -331,7 +331,9 @@ impl App{
         let get_logs = container(button("Get logs").on_press(Message::MainPage(MainPageMessage::Logs))).align_x(Center);
         let bot_row = row![horizontal_space(),get_logs,horizontal_space(),log_out_btn];
         let logs_text = text(self.maindata.logs.clone()).size(20);
-        let logs = scrollable(column![logs_text].padding(30).spacing(20));
+        let logs = container(
+            scrollable(column![logs_text].padding(30).spacing(20))
+        ).height(Length::Fixed(599.0)).width(Length::Fill);
         column![logs,bot_row].padding(30).spacing(20).into()
     }
     fn update(&mut self, message:Message){
@@ -426,6 +428,7 @@ impl App{
                                 fs::create_dir_all(&decrypted_folder).expect("Failed to create decrypted folder");
                                 let decrypted_path = decrypted_folder.join("decrypted_data.txt");
                                 fs::write(&decrypted_path, &decrypted_data).expect("Failed to write decrypted data");
+                                self.log_action(self.current_user.into(), "Decrypt");
                                 println!("Decrypted data has been saved to {:?}", decrypted_folder);
                                 
                             }
@@ -483,6 +486,7 @@ impl App{
                                 fs::write(&encrypted_data_path, &ciphertext).expect("Failed to write encrypted data");
                                 self.maindata.nonce_string = hex::encode(&nonce);
                                 self.maindata.reminder = "Dont forget to copy and send your nonce! it is used for decryption".to_string();
+                                self.log_action(self.current_user.into(), "Encrypt");
                                 println!("{}",self.maindata.nonce_string);
                                 println!("Encrypted key and data have been saved to {:?}", encrypted_folder);
                             }
@@ -492,6 +496,7 @@ impl App{
                         }
                     }
                     MainPageMessage::Logs => {
+                        self.log_action(self.current_user.into(), "Getlogs");
                         self.get_logs();
                     }
                     MainPageMessage::Logout => {
@@ -521,6 +526,7 @@ impl App{
         }
     }
     fn get_logs(&mut self) {
+        self.maindata.logs.clear();
         match &self.connect{
             Some(value) => {
                 let mut statement = value.prepare("
@@ -587,6 +593,21 @@ impl App{
             }
         }
     }
+    fn log_action(&self, user_id: i64, action: &str) {
+        match &self.connect {
+            Some(val) => {
+                let mut statement = val.prepare("INSERT INTO logs (userid, action) VALUES (?, ?)").unwrap();
+                statement.bind((1, user_id)).unwrap();
+                statement.bind((2, action)).unwrap();
+                statement.next().expect("Failed to execute statement");
+                println!("Testing logs added")
+            }
+
+            None => {
+                return
+            }
+        }
+    }
     fn gen_key(&mut self) {
         let mut rng = rand::thread_rng();
         let private_key = RsaPrivateKey::new(&mut rng, 2048).expect("Failed to generate a private key");
@@ -595,6 +616,7 @@ impl App{
         let s2 = public_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::CRLF).expect("Failed to convert public key to PKCS1 PEM").to_string();
         let combined = format!("{}\n{}",s1,s2);
         self.maindata.combined_key = Content::with_text(&combined);
+        self.log_action(self.current_user.into(), "Generate Key");
     }       
 }    
     fn theme(app: &App) -> Theme {
