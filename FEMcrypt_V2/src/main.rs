@@ -386,21 +386,21 @@ impl App{
                             DecryptPage::DecryptData => {
                                 if !self.maindata.decrpt.file1.exists() || !self.maindata.decrpt.file2.exists() {
                                     println!("Error: One or both files have not been selected or cannot be found.");
-                                    return;  // Early exit if one or both files don't exist
+                                    return;
                                 }
                                 let private_key = match parse(self.maindata.decrpt.private_key.as_bytes()) {
                                     Ok(pem) => {
                                         match RsaPrivateKey::from_pkcs1_der(&pem.contents) {
-                                            Ok(key) => key, // Successful parsing of RSAPrivateKey
+                                            Ok(key) => key, 
                                             Err(e) => {
                                                 println!("Failed to parse private key: {:?}", e);
-                                                return;  // Exit early if parsing fails
+                                                return;
                                             }
                                         }
                                     }
                                     Err(e) => {
                                         println!("Failed to parse PEM: {:?}", e);
-                                        return;  // Exit early if PEM parsing fails
+                                        return;
                                     }
                                 };
                                 let encrypted_key = fs::read(&self.maindata.decrpt.file2).expect("Failed to read encrypted key");
@@ -409,16 +409,16 @@ impl App{
                                     Ok(nonce) => nonce,
                                     Err(e) => {
                                         println!("Failed to decode nonce: {:?}", e);
-                                        return;  // Exit early if nonce decoding fails
+                                        return;  
                                     }
                                 };
                                 let nonce = Nonce::from_slice(&nonce_slice);
 
                                 let aes_key = match private_key.decrypt(Pkcs1v15Encrypt, &encrypted_key) {
-                                    Ok(key) => key, // Successful decryption of AES key
+                                    Ok(key) => key, 
                                     Err(e) => {
                                         println!("Failed to decrypt AES key: {:?}", e);
-                                        return;  // Exit early if decryption fails
+                                        return; 
                                     }
                                 };
                                 let cipher = Aes256Gcm::new_from_slice(&aes_key).unwrap();
@@ -451,7 +451,7 @@ impl App{
                             EncryptPage::Encryptdata => {
                                 if !self.maindata.file.exists() {
                                     println!("Error: The file has not been selected or cannot be found.");
-                                    return;  // Early exit if the file doesn't exist
+                                    return;  
                                 }
                                 let mut rng = rand::thread_rng();
                                 let data = fs::read(&self.maindata.file).expect("Failed to read file");
@@ -462,16 +462,16 @@ impl App{
                                 let public_key = match parse(self.maindata.pub_key.as_bytes()) {  
                                     Ok(pem) => {
                                         match RsaPublicKey::from_pkcs1_der(&pem.contents) {
-                                            Ok(key) => key, // Successful parsing of RSAPublicKey
+                                            Ok(key) => key, 
                                             Err(e) => {
                                                 println!("Failed to parse public key: {:?}", e);
-                                                return;  // Exit early if parsing fails
+                                                return;  
                                             }
                                         }
                                     }
                                     Err(e) => {
                                         println!("Failed to parse PEM: {:?}", e);
-                                        return;  // Exit early if PEM parsing fails
+                                        return;
                                     }
                                 };
                                 let encrypted_key = public_key.encrypt(&mut rng, Pkcs1v15Encrypt, &aes_key).expect("Failed to encrypt AES key");
