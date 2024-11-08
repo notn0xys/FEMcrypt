@@ -333,7 +333,7 @@ impl App{
         let logs_text = text(self.maindata.logs.clone()).size(20);
         let logs = container(
             scrollable(column![logs_text].padding(30).spacing(20))
-        ).height(Length::Fixed(599.0)).width(Length::Fill);
+        ).height(Length::Fixed(599.0)).width(Length::Fill).align_x(Center);
         column![logs,bot_row].padding(30).spacing(20).into()
     }
     fn update(&mut self, message:Message){
